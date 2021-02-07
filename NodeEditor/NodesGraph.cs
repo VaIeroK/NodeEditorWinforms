@@ -32,7 +32,7 @@ namespace NodeEditor
         public List<NodeVisual> Nodes = new List<NodeVisual>();
         public List<NodeConnection> Connections = new List<NodeConnection>();
 
-        public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons)
+        public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons, bool preferFastRendering = false)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -59,8 +59,8 @@ namespace NodeEditor
                 var begin = beginSocket.Location + new SizeF(beginSocket.Width / 2f, beginSocket.Height / 2f);
                 var end = endSocket.Location += new SizeF(endSocket.Width / 2f, endSocket.Height / 2f);                               
 
-                DrawConnection(g, epen2, begin, end);
-                DrawConnection(g, epen, begin, end);                
+                DrawConnection(g, epen2, begin, end, preferFastRendering);
+                DrawConnection(g, epen, begin, end, preferFastRendering);                
             }
             foreach (var connection in Connections.Where(x => !x.IsExecution))
             {
@@ -71,7 +71,7 @@ namespace NodeEditor
                 var begin = beginSocket.Location + new SizeF(beginSocket.Width / 2f, beginSocket.Height / 2f);
                 var end = endSocket.Location += new SizeF(endSocket.Width / 2f, endSocket.Height / 2f);
                 
-                DrawConnection(g, cpen, begin, end);
+                DrawConnection(g, cpen, begin, end, preferFastRendering);
                
             }
 
@@ -85,13 +85,10 @@ namespace NodeEditor
             Console.WriteLine($"graph.Draw took {sw.ElapsedMilliseconds}ms");
         }
 
-        public static void DrawConnection(Graphics g, Pen pen, PointF output, PointF input)
-        {
-            g.InterpolationMode = InterpolationMode.HighQualityBilinear;
-            g.SmoothingMode = SmoothingMode.HighQuality;
-
+        public static void DrawConnection(Graphics g, Pen pen, PointF output, PointF input, bool preferFastRendering = false)
+        {            
             if (input == output) return;
-            const int interpolation = 48;
+            int interpolation = preferFastRendering ? 16 : 48;
 
             PointF[] points = new PointF[interpolation];
             for (int i = 0; i < interpolation; i++)
