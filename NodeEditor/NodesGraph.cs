@@ -31,8 +31,10 @@ namespace NodeEditor
     {
         public List<NodeVisual> Nodes = new List<NodeVisual>();
         public List<NodeConnection> Connections = new List<NodeConnection>();
+        static Pen executionPen;
+        static Pen executionPen2;
 
-        public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons, bool preferFastRendering = false)
+        public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons, bool preferFastRendering, DrawInfo info)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -46,10 +48,9 @@ namespace NodeEditor
             }
 
             g.FillRectangle(new SolidBrush(Color.FromArgb(200, Color.White)), g.ClipBounds);
-
-            var cpen = Pens.Black;
-            var epen = new Pen(Color.Gold, 3);
-            var epen2 = new Pen(Color.Black, 5);
+            
+            executionPen = (executionPen ?? new Pen(Color.Gold, 3));
+            executionPen2 = (executionPen2 ?? new Pen(Color.Black, 5));
             foreach (var connection in Connections.Where(x=>x.IsExecution))
             {
                 var osoc = connection.OutputNode.GetSockets().FirstOrDefault(x => x.Name == connection.OutputSocketName);
@@ -59,8 +60,8 @@ namespace NodeEditor
                 var begin = beginSocket.Location + new SizeF(beginSocket.Width / 2f, beginSocket.Height / 2f);
                 var end = endSocket.Location += new SizeF(endSocket.Width / 2f, endSocket.Height / 2f);                               
 
-                DrawConnection(g, epen2, begin, end, preferFastRendering);
-                DrawConnection(g, epen, begin, end, preferFastRendering);                
+                DrawConnection(g, executionPen2, begin, end, preferFastRendering);
+                DrawConnection(g, executionPen, begin, end, preferFastRendering);                
             }
             foreach (var connection in Connections.Where(x => !x.IsExecution))
             {
@@ -70,7 +71,8 @@ namespace NodeEditor
                 var endSocket = isoc.GetBounds();
                 var begin = beginSocket.Location + new SizeF(beginSocket.Width / 2f, beginSocket.Height / 2f);
                 var end = endSocket.Location += new SizeF(endSocket.Width / 2f, endSocket.Height / 2f);
-                
+
+                var cpen = info.GetConnectionStyle(connection.InputSocket.Type, false);
                 DrawConnection(g, cpen, begin, end, preferFastRendering);
                
             }
