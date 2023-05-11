@@ -52,16 +52,16 @@ namespace NodeEditor
         /// Current node position Y coordinate.
         /// </summary>
         public float Y { get; set; }
-        internal MethodInfo Type { get; set; }
-        internal int Order { get; set; }
-        internal bool Callable { get; set; }
-        internal bool ExecInit { get; set; }
-        internal bool IsSelected { get; set; }
-        internal FeedbackType Feedback { get; set; }
+        public MethodInfo Type { get; set; }
+        public int Order { get; set; }
+        public bool Callable { get; set; }
+        public bool ExecInit { get; set; }
+        public bool IsSelected { get; set; }
+        public FeedbackType Feedback { get; set; }
         private object nodeContext { get; set; } 
         public Control CustomEditor { get; internal set; }
         internal string GUID = Guid.NewGuid().ToString();
-        internal Color NodeColor = Color.LightCyan;
+        public Color NodeColor = Color.LightCyan;
         public bool IsBackExecuted { get; internal set; }
         private SocketVisual[] socketCache;
 
@@ -74,7 +74,7 @@ namespace NodeEditor
         internal int CustomWidth = -1;
         internal int CustomHeight = -1;
 
-        internal NodeVisual()
+        public NodeVisual()
         {
             Feedback = FeedbackType.Debug;
         }

@@ -25,7 +25,7 @@ using System.Windows.Forms;
 
 namespace NodeEditor
 {
-    internal class SocketVisual
+    public class SocketVisual
     {
         public const float SocketHeight = 16;
 

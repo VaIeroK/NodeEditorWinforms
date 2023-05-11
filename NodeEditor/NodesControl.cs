@@ -42,8 +42,8 @@ namespace NodeEditor
             public NodeAttribute Attribute;
         }
 
-        private NodesGraph graph = new NodesGraph();
-        private bool needRepaint = true;
+        public NodesGraph graph = new NodesGraph();
+        public bool needRepaint = true;
         private Timer timer = new Timer();
         private bool mdown;
         private Point lastmpos;

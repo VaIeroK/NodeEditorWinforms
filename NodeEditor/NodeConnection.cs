@@ -22,7 +22,7 @@ using System.Text;
 
 namespace NodeEditor
 {    
-    internal class NodeConnection
+    public class NodeConnection
     {
         public NodeVisual OutputNode { get; set; }
         public string OutputSocketName { get; set; }

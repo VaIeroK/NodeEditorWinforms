@@ -25,10 +25,10 @@ using System.Windows.Forms;
 
 namespace NodeEditor
 {
-    internal class NodesGraph
+    public class NodesGraph
     {
-        internal List<NodeVisual> Nodes = new List<NodeVisual>();
-        internal List<NodeConnection> Connections = new List<NodeConnection>();
+        public List<NodeVisual> Nodes = new List<NodeVisual>();
+        public List<NodeConnection> Connections = new List<NodeConnection>();
 
         public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons)
         {
