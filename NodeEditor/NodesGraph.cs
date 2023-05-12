@@ -23,6 +23,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
+using System.Diagnostics;
+
 namespace NodeEditor
 {
     public class NodesGraph
@@ -32,6 +34,9 @@ namespace NodeEditor
 
         public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons)
         {
+            var sw = new Stopwatch();
+            sw.Start();
+
             g.InterpolationMode = InterpolationMode.Low;
             g.SmoothingMode = SmoothingMode.HighSpeed;
 
@@ -75,6 +80,9 @@ namespace NodeEditor
             {
                 node.Draw(g, mouseLocation, mouseButtons);
             }
+
+            sw.Stop();
+            Console.WriteLine($"graph.Draw took {sw.ElapsedMilliseconds}ms");
         }
 
         public static void DrawConnection(Graphics g, Pen pen, PointF output, PointF input)
