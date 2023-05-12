@@ -29,6 +29,61 @@ using System.Windows.Forms;
 
 namespace NodeEditor
 {
+
+    public interface INodeType
+    {
+        string Name { get; }
+        IEnumerable<Parameter> GetParameters();
+        object Invoke(object obj, object[] parameters);
+    }
+
+    public enum Direction
+    {
+        In,
+        Out,
+    }
+
+    public class Parameter
+    {
+        public Direction Direction { get; set; }
+        public string Name { get; set; }
+        public Type ParameterType { get; set; }
+    }
+
+    public class MethodNodeType : INodeType
+    {
+        public MethodInfo Method { get; set; }
+        public string Name
+        {
+            get { return Method.Name; }
+        }
+        public IEnumerable<Parameter> GetParameters()
+        {
+            return Method.GetParameters().Select(p => new Parameter {
+                Name = p.Name,
+                Direction = p.IsOut ? Direction.Out : Direction.In,
+                ParameterType = p.ParameterType,
+            });
+        }
+        public object Invoke(object obj, object[] parameters)
+        {
+            return Method.Invoke(obj, parameters);
+        }
+    }
+    public class CustomNodeType : INodeType
+    {
+        public string Name { get; set; }
+        public List<Parameter> Parameters { get; set; }
+        public IEnumerable<Parameter> GetParameters()
+        {
+            return Parameters;
+        }
+        public object Invoke(object obj, object[] parameters)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     /// <summary>
     /// Class that represents one instance of node.
     /// </summary>
@@ -52,7 +107,7 @@ namespace NodeEditor
         /// Current node position Y coordinate.
         /// </summary>
         public float Y { get; set; }
-        public MethodInfo Type { get; set; }
+        public INodeType Type { get; set; }
         public int Order { get; set; }
         public bool Callable { get; set; }
         public bool ExecInit { get; set; }
@@ -224,14 +279,14 @@ namespace NodeEditor
             return nodeContext;
         }
 
-        internal ParameterInfo[] GetInputs()
+        internal IEnumerable<Parameter> GetInputs()
         {
-            return Type.GetParameters().Where(x => !x.IsOut).ToArray();
+            return Type.GetParameters().Where(x => x.Direction == Direction.In);
         }
 
-        internal ParameterInfo[] GetOutputs()
+        internal IEnumerable<Parameter> GetOutputs()
         {
-            return Type.GetParameters().Where(x => x.IsOut).ToArray();
+            return Type.GetParameters().Where(x => x.Direction == Direction.Out);
         }
 
         /// <summary>
@@ -246,8 +301,8 @@ namespace NodeEditor
                     CustomEditor.ClientSize.Height + HeaderHeight + 8);                
             }
 
-            var inputs = GetInputs().Length;
-            var outputs = GetOutputs().Length;
+            var inputs = GetInputs().Count();
+            var outputs = GetOutputs().Count();
             if (Callable)
             {
                 inputs++;
@@ -336,7 +391,7 @@ namespace NodeEditor
             context.CurrentProcessingNode = this;
 
             var dc = (GetNodeContext() as DynamicNodeContext);
-            var parametersDict = Type.GetParameters().OrderBy(x => x.Position).ToDictionary(x => x.Name, x => dc[x.Name]);
+            var parametersDict = Type.GetParameters().ToDictionary(x => x.Name, x => dc[x.Name]);
             var parameters = parametersDict.Values.ToArray();
 
             int ndx = 0;

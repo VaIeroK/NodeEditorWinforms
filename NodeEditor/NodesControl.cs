@@ -531,7 +531,7 @@ namespace NodeEditor
                         var nv = new NodeVisual();
                         nv.X = lastMouseLocation.X;
                         nv.Y = lastMouseLocation.Y;
-                        nv.Type = node.Method;
+                        nv.Type = new MethodNodeType() { Method = node.Method };
                         nv.Callable = node.Attribute.IsCallable;
                         nv.Name = node.Attribute.Name;
                         nv.Order = graph.Nodes.Count;
@@ -932,8 +932,10 @@ namespace NodeEditor
             nv.Order = br.ReadInt32();
             var customEditorAssembly = br.ReadString();
             var customEditor = br.ReadString();
-            nv.Type = Context.GetType().GetMethod(br.ReadString());
-            var attribute = nv.Type.GetCustomAttributes(typeof(NodeAttribute), false)
+            var method = Context.GetType().GetMethod(br.ReadString());
+            nv.Type = new MethodNodeType { Method = method };
+
+            var attribute = method.GetCustomAttributes(typeof(NodeAttribute), false)
                                         .Cast<NodeAttribute>()
                                         .FirstOrDefault();
             if(attribute!=null)
