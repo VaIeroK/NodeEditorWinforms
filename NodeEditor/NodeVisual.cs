@@ -288,6 +288,10 @@ namespace NodeEditor
         public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons)
         {
             var rect = new RectangleF(new PointF(X,Y), GetNodeBounds());
+            if (!rect.IntersectsWith(g.ClipBounds))
+            {
+                return;
+            }
 
             var feedrect = rect;
             feedrect.Inflate(10, 10);
