@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -9,8 +8,16 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NodeEditor</RootNamespace>
     <AssemblyName>NodeEditor</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFramework>net472</TargetFramework>
     <FileAlignment>512</FileAlignment>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Title>Node Editor Winforms</Title>
+    <Description>Node based user control / editor for Windows Forms</Description>
+    <Company>Mariusz Komorowski</Company>
+    <Product>NodeEditor</Product>
+    <Copyright>Copyright ©  2021 Mariusz Komorowski</Copyright>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,55 +46,11 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="DynamicNodeContext.cs" />
-    <Compile Include="DynamicNodeContextConverter.cs" />
-    <Compile Include="ExecutionPath.cs" />
-    <Compile Include="FeedbackType.cs" />
-    <Compile Include="INodesContext.cs" />
-    <Compile Include="NodeAttribute.cs" />
-    <Compile Include="NodeConnection.cs" />
-    <Compile Include="NodesControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="NodesControl.Designer.cs">
-      <DependentUpon>NodesControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="NodesGraph.cs" />
-    <Compile Include="NodeVisual.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="SocketVisual.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="NodesControl.resx">
-      <DependentUpon>NodesControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\socket.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\exec.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\nodeed.png" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
