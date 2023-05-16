@@ -349,13 +349,10 @@ namespace NodeEditor
         /// <param name="g">Graphics context.</param>
         /// <param name="mouseLocation">Location of the mouse relative to NodesControl instance.</param>
         /// <param name="mouseButtons">Mouse buttons that are pressed while drawing node.</param>
-        public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons)
+        public void Draw(Graphics g, RectangleF clipBounds, Point mouseLocation, MouseButtons mouseButtons)
         {
             var rect = new RectangleF(new PointF(X,Y), GetNodeBounds());
-            if (!rect.IntersectsWith(g.ClipBounds))
-            {
-                return;
-            }
+            if (!rect.IntersectsWith(clipBounds)) return;
 
             var feedrect = rect;
             feedrect.Inflate(10, 10);

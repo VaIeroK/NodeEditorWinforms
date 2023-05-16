@@ -204,7 +204,7 @@ namespace NodeEditor
             if (dragSocket != null)
             {
                 var pen = customDrawInfo.GetConnectionStyle(dragSocket.Type, true);
-                NodesGraph.DrawConnection(e.Graphics, pen, dragConnectionBegin, dragConnectionEnd, PreferFastRendering);
+                NodesGraph.DrawConnection(e.Graphics, e.Graphics.ClipBounds, pen, dragConnectionBegin, dragConnectionEnd, PreferFastRendering);
             }
 
             if (selectionStart != PointF.Empty)

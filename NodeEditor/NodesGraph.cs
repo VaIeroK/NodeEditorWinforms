@@ -39,6 +39,8 @@ namespace NodeEditor
             var sw = new Stopwatch();
             sw.Start();
 
+            var clipBounds = g.ClipBounds;
+
             g.InterpolationMode = InterpolationMode.Low;
             g.SmoothingMode = SmoothingMode.HighSpeed;
 
@@ -60,8 +62,8 @@ namespace NodeEditor
                 var begin = beginSocket.Location + new SizeF(beginSocket.Width / 2f, beginSocket.Height / 2f);
                 var end = endSocket.Location += new SizeF(endSocket.Width / 2f, endSocket.Height / 2f);                               
 
-                DrawConnection(g, executionPen2, begin, end, preferFastRendering);
-                DrawConnection(g, executionPen, begin, end, preferFastRendering);                
+                DrawConnection(g, clipBounds, executionPen2, begin, end, preferFastRendering);
+                DrawConnection(g, clipBounds, executionPen, begin, end, preferFastRendering);
             }
             foreach (var connection in Connections.Where(x => !x.IsExecution))
             {
@@ -73,21 +75,21 @@ namespace NodeEditor
                 var end = endSocket.Location += new SizeF(endSocket.Width / 2f, endSocket.Height / 2f);
 
                 var cpen = info.GetConnectionStyle(connection.InputSocket.Type, false);
-                DrawConnection(g, cpen, begin, end, preferFastRendering);
+                DrawConnection(g, clipBounds, cpen, begin, end, preferFastRendering);
                
             }
 
             var orderedNodes = Nodes.OrderByDescending(x => x.Order);
             foreach (var node in orderedNodes)
             {
-                node.Draw(g, mouseLocation, mouseButtons);
+                node.Draw(g, clipBounds, mouseLocation, mouseButtons);
             }
 
             sw.Stop();
             Console.WriteLine($"graph.Draw took {sw.ElapsedMilliseconds}ms");
         }
 
-        public static void DrawConnection(Graphics g, Pen pen, PointF output, PointF input, bool preferFastRendering = false)
+        public static void DrawConnection(Graphics g, RectangleF clipBounds, Pen pen, PointF output, PointF input, bool preferFastRendering = false)
         {            
             if (input == output) return;
 
@@ -97,7 +99,7 @@ namespace NodeEditor
             var maxY = Math.Max(input.Y, output.Y);
             var bounds = new RectangleF(minX, minY, maxX - minX, maxY - minY);
 
-            if (!g.ClipBounds.IntersectsWith(bounds)) return;
+            if (!clipBounds.IntersectsWith(bounds)) return;
 
             int interpolation = preferFastRendering ? 16 : 48;
 
