@@ -90,6 +90,15 @@ namespace NodeEditor
         public static void DrawConnection(Graphics g, Pen pen, PointF output, PointF input, bool preferFastRendering = false)
         {            
             if (input == output) return;
+
+            var minX = Math.Min(input.X, output.X);
+            var minY = Math.Min(input.Y, output.Y);
+            var maxX = Math.Max(input.X, output.X);
+            var maxY = Math.Max(input.Y, output.Y);
+            var bounds = new RectangleF(minX, minY, maxX - minX, maxY - minY);
+
+            if (!g.ClipBounds.IntersectsWith(bounds)) return;
+
             int interpolation = preferFastRendering ? 16 : 48;
 
             PointF[] points = new PointF[interpolation];
