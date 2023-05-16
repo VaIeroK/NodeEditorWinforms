@@ -33,6 +33,7 @@ namespace NodeEditor
     public interface INodeType
     {
         string Name { get; }
+        Type CustomEditor { get; }
         IEnumerable<Parameter> GetParameters();
         object Invoke(object obj, object[] parameters);
     }
@@ -57,6 +58,10 @@ namespace NodeEditor
         {
             get { return Method.Name; }
         }
+        public Type CustomEditor
+        {
+            get { return null; }
+        }
         public IEnumerable<Parameter> GetParameters()
         {
             return Method.GetParameters().Select(p => new Parameter {
@@ -73,6 +78,7 @@ namespace NodeEditor
     public class CustomNodeType : INodeType
     {
         public string Name { get; set; }
+        public Type CustomEditor  { get; set; }
         public List<Parameter> Parameters { get; set; }
         public IEnumerable<Parameter> GetParameters()
         {
@@ -420,7 +426,7 @@ namespace NodeEditor
             }
         }
 
-        internal void LayoutEditor(float zoom)
+        public void LayoutEditor(float zoom)
         {
             if (CustomEditor != null)
             {

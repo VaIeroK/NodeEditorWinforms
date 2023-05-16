@@ -1057,6 +1057,30 @@ namespace NodeEditor
             return nv;
         }
 
+        public void AddNode(NodeVisual nv, bool repaint = true)
+        {
+            nv.Order = graph.Nodes.Count;
+            if (nv.Type.CustomEditor != null)
+            {
+                nv.CustomEditor = Activator.CreateInstance(nv.Type.CustomEditor) as Control;
+
+                Control ctrl = nv.CustomEditor;
+                if (ctrl != null)
+                {
+                    ctrl.Tag = nv;
+                    Controls.Add(ctrl);
+                    PassZoomToNodeCustomEditor(ctrl);
+                }
+                nv.LayoutEditor(zoom);
+            }
+            graph.Nodes.Add(nv);
+            if (repaint)
+            {
+                Refresh();
+                needRepaint = true;
+            }
+        }
+
         /// <summary>
         /// Clears node graph state.
         /// </summary>
