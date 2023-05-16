@@ -279,12 +279,12 @@ namespace NodeEditor
             return nodeContext;
         }
 
-        internal IEnumerable<Parameter> GetInputs()
+        public IEnumerable<Parameter> GetInputs()
         {
             return Type.GetParameters().Where(x => x.Direction == Direction.In);
         }
 
-        internal IEnumerable<Parameter> GetOutputs()
+        public IEnumerable<Parameter> GetOutputs()
         {
             return Type.GetParameters().Where(x => x.Direction == Direction.Out);
         }
