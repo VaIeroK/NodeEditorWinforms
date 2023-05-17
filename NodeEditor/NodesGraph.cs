@@ -23,8 +23,6 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 
-using System.Diagnostics;
-
 namespace NodeEditor
 {
     public class NodesGraph
@@ -34,13 +32,8 @@ namespace NodeEditor
         static Pen executionPen;
         static Pen executionPen2;
 
-        public void Draw(Graphics g, Point mouseLocation, MouseButtons mouseButtons, bool preferFastRendering, DrawInfo info)
+        public void Draw(GLGraphics g, RectangleF clipBounds, Point mouseLocation, MouseButtons mouseButtons, bool preferFastRendering, DrawInfo info)
         {
-            var sw = new Stopwatch();
-            sw.Start();
-
-            var clipBounds = g.ClipBounds;
-
             g.InterpolationMode = InterpolationMode.Low;
             g.SmoothingMode = SmoothingMode.HighSpeed;
 
@@ -49,7 +42,7 @@ namespace NodeEditor
                 g.FillRectangle(Brushes.Black, new RectangleF(new PointF(node.X+6, node.Y+6), node.GetNodeBounds()));
             }
 
-            g.FillRectangle(new SolidBrush(Color.FromArgb(200, Color.White)), g.ClipBounds);
+            g.FillRectangle(new SolidBrush(Color.FromArgb(200, Color.White)), clipBounds);
             
             executionPen = (executionPen ?? new Pen(Color.Gold, 3));
             executionPen2 = (executionPen2 ?? new Pen(Color.Black, 5));
@@ -84,12 +77,9 @@ namespace NodeEditor
             {
                 node.Draw(g, clipBounds, mouseLocation, mouseButtons);
             }
-
-            sw.Stop();
-            Console.WriteLine($"graph.Draw took {sw.ElapsedMilliseconds}ms");
         }
 
-        public static void DrawConnection(Graphics g, RectangleF clipBounds, Pen pen, PointF output, PointF input, bool preferFastRendering = false)
+        public static void DrawConnection(GLGraphics g, RectangleF clipBounds, Pen pen, PointF output, PointF input, bool preferFastRendering = false)
         {            
             if (input == output) return;
 

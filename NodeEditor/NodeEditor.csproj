@@ -47,6 +47,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
+    <PackageReference Include="OpenTK.GLControl" Version="3.3.3" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\socket.png" />

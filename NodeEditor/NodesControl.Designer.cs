@@ -32,12 +32,9 @@
             // 
             // NodesControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.DoubleBuffered = true;
             this.Name = "NodesControl";
             this.Size = new System.Drawing.Size(574, 401);
-            this.Paint += new System.Windows.Forms.PaintEventHandler(this.NodesControl_Paint);
+            this.Resize += new System.EventHandler(this.NodesControl_Resize);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.NodesControl_MouseClick);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.NodesControl_MouseDown);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.NodesControl_MouseMove);

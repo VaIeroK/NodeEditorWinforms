@@ -17,7 +17,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Data;
 using System.Drawing.Drawing2D;
@@ -28,13 +28,17 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 
+using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL;
+
 namespace NodeEditor
 {
     /// <summary>
     /// Main control of Node Editor Winforms
     /// </summary>
     [ToolboxBitmap(typeof(NodesControl), "nodeed")]
-    public partial class NodesControl : UserControl, IZoomable
+    public partial class NodesControl : GLControl, IZoomable
     {
         internal class NodeToken
         {
@@ -44,7 +48,6 @@ namespace NodeEditor
 
         public NodesGraph graph = new NodesGraph();
         public bool needRepaint = true;
-        private Timer timer = new Timer();
         private bool mdown;
         private Point lastmpos;
         private SocketVisual dragSocket;
@@ -148,9 +151,6 @@ namespace NodeEditor
         public NodesControl()
         {
             InitializeComponent();
-            timer.Interval = 30;
-            timer.Tick += TimerOnTick;
-            timer.Start();        
             KeyDown += OnKeyDown;
             SetStyle(ControlStyles.Selectable, true);
         }
@@ -182,39 +182,76 @@ namespace NodeEditor
             }
         }
 
-        private void TimerOnTick(object sender, EventArgs eventArgs)
+        private void NodesControl_Resize(object sender, EventArgs e)
         {
-            if (DesignMode) return;
-            if (needRepaint)
-            {
-                Invalidate();
-            }
+            MakeCurrent();
+
+            if (ClientSize.Height == 0)
+                ClientSize = new System.Drawing.Size(ClientSize.Width, 1);
+
+            GL.Viewport(0, 0, ClientSize.Width, ClientSize.Height);
+
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadIdentity();
+            GL.Ortho(0, ClientSize.Width, ClientSize.Height, 0, 0, 1);
         }
 
-        private void NodesControl_Paint(object sender, PaintEventArgs e)
+        protected override void OnPaintBackground(PaintEventArgs e)
         {
-            e.Graphics.SmoothingMode = PreferFastRendering ? SmoothingMode.HighSpeed : SmoothingMode.HighQuality;
-            e.Graphics.InterpolationMode = PreferFastRendering ? InterpolationMode.Low : InterpolationMode.HighQualityBilinear;
-            e.Graphics.ScaleTransform(zoom, zoom);
+            MakeCurrent();
 
-            OnPaintNodesBackground(sender, e);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.Enable(EnableCap.Blend);
 
-            graph.Draw(e.Graphics, GetLocationWithZoom(PointToClient(MousePosition)), MouseButtons, PreferFastRendering, customDrawInfo);            
+            GL.ClearColor(Color4.MidnightBlue);
+
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            var sw = new Stopwatch();
+            sw.Start();
+            MakeCurrent();
+
+
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.Enable(EnableCap.Blend);
+
+            GL.ClearColor(Color4.MidnightBlue);
+
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+
+            //var g = e.Graphics;
+            var g = new GLGraphics();
+            var clipBounds = e.Graphics.ClipBounds;
+
+            //g.SmoothingMode = PreferFastRendering ? SmoothingMode.HighSpeed : SmoothingMode.HighQuality;
+            //g.InterpolationMode = PreferFastRendering ? InterpolationMode.Low : InterpolationMode.HighQualityBilinear;
+            //g.ScaleTransform(zoom, zoom);
+
+            graph.Draw(g, clipBounds, GetLocationWithZoom(PointToClient(MousePosition)), MouseButtons, PreferFastRendering, customDrawInfo);
 
             if (dragSocket != null)
             {
                 var pen = customDrawInfo.GetConnectionStyle(dragSocket.Type, true);
-                NodesGraph.DrawConnection(e.Graphics, e.Graphics.ClipBounds, pen, dragConnectionBegin, dragConnectionEnd, PreferFastRendering);
+                NodesGraph.DrawConnection(g, clipBounds, pen, dragConnectionBegin, dragConnectionEnd, PreferFastRendering);
             }
 
             if (selectionStart != PointF.Empty)
             {
                 var rect = Rectangle.Round(MakeRect(selectionStart, selectionEnd));
-                e.Graphics.FillRectangle(new SolidBrush(Color.FromArgb(50, Color.CornflowerBlue)), rect);
-                e.Graphics.DrawRectangle(new Pen(Color.DodgerBlue), rect);
+                g.FillRectangle(new SolidBrush(Color.FromArgb(50, Color.CornflowerBlue)), rect);
+                g.DrawRectangle(new Pen(Color.DodgerBlue), rect);
             }
 
             needRepaint = false;
+
+            SwapBuffers();
+
+            sw.Stop();
+            Console.WriteLine($"paint took {sw.ElapsedMilliseconds}ms");
         }
 
         private static RectangleF MakeRect(PointF a, PointF b)
@@ -278,7 +315,7 @@ namespace NodeEditor
                 lastmpos = em;
             }            
 
-            needRepaint = true;
+            Invalidate();
         }
 
         private void NodesControl_MouseDown(object sender, MouseEventArgs e)
@@ -380,7 +417,7 @@ namespace NodeEditor
                 }
             }
 
-            needRepaint = true;
+            Invalidate();
         }
 
         private void PassZoomToNodeCustomEditor(Control control)
@@ -473,7 +510,7 @@ namespace NodeEditor
            
             dragSocket = null;
             mdown = false;
-            needRepaint = true;
+            Invalidate();
         }
 
         private void AddToMenu(ToolStripItemCollection items, NodeToken token, string path, EventHandler click)
