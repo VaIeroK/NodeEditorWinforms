@@ -32,7 +32,7 @@ namespace NodeEditor
         static Pen executionPen;
         static Pen executionPen2;
 
-        public void Draw(GLGraphics g, RectangleF clipBounds, Point mouseLocation, MouseButtons mouseButtons, bool preferFastRendering, DrawInfo info)
+        public void Draw(GLGraphics g, RectangleF clipBounds, PointF mouseLocation, MouseButtons mouseButtons, bool preferFastRendering, DrawInfo info)
         {
             g.InterpolationMode = InterpolationMode.Low;
             g.SmoothingMode = SmoothingMode.HighSpeed;

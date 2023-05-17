@@ -44,7 +44,7 @@ namespace NodeEditor
             get { return Type.Name.Replace("&", "") == typeof (ExecutionPath).Name; }
         }
 
-        public void Draw(GLGraphics g, Point mouseLocation, MouseButtons mouseButtons)
+        public void Draw(GLGraphics g, PointF mouseLocation, MouseButtons mouseButtons)
         {            
             var socketRect = new RectangleF(X, Y, Width, Height);
             var hover = socketRect.Contains(mouseLocation);

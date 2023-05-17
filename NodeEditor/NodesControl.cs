@@ -49,7 +49,7 @@ namespace NodeEditor
         public NodesGraph graph = new NodesGraph();
         public bool needRepaint = true;
         private bool mdown;
-        private Point lastmpos;
+        private PointF lastmpos;
         private SocketVisual dragSocket;
         private NodeVisual dragSocketNode;
         private PointF dragConnectionBegin;
@@ -133,13 +133,17 @@ namespace NodeEditor
 
         private readonly Dictionary<ToolStripMenuItem,int> allContextItems = new Dictionary<ToolStripMenuItem, int>();
 
-        private Point lastMouseLocation;
+        private PointF lastMouseLocation;
 
         private Point autoScroll;
 
         private PointF selectionStart;
 
         private PointF selectionEnd;
+
+        private PointF dragStart = Point.Empty;
+
+        private Matrix4 transform = Matrix4.Identity;
 
         private INodesContext context;
 
@@ -227,6 +231,10 @@ namespace NodeEditor
             var g = new GLGraphics();
             var clipBounds = e.Graphics.ClipBounds;
 
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.PushMatrix();
+            GL.MultMatrix(ref transform);
+
             //g.SmoothingMode = PreferFastRendering ? SmoothingMode.HighSpeed : SmoothingMode.HighQuality;
             //g.InterpolationMode = PreferFastRendering ? InterpolationMode.Low : InterpolationMode.HighQualityBilinear;
             //g.ScaleTransform(zoom, zoom);
@@ -248,6 +256,8 @@ namespace NodeEditor
 
             needRepaint = false;
 
+            GL.PopMatrix();
+
             SwapBuffers();
 
             sw.Stop();
@@ -266,8 +276,14 @@ namespace NodeEditor
         private void NodesControl_MouseMove(object sender, MouseEventArgs e)
         {
             var loc = GetLocationWithZoom(e.Location);
-            var em = PointToScreen(loc);
-            
+
+            if (dragStart != PointF.Empty)
+            {
+                transform = Matrix4.CreateTranslation(loc.X - dragStart.X, loc.Y - dragStart.Y, 0) * transform;
+
+                loc = GetLocationWithZoom(e.Location); // update loc again since transform was updated
+                dragStart = loc;
+            }
             if (selectionStart != PointF.Empty)
             {
                 selectionEnd = loc;
@@ -276,8 +292,8 @@ namespace NodeEditor
             {                                            
                 foreach (var node in graph.Nodes.Where(x => x.IsSelected))
                 {
-                    node.X += em.X - lastmpos.X;
-                    node.Y += em.Y - lastmpos.Y;
+                    node.X += loc.X - lastmpos.X;
+                    node.Y += loc.Y - lastmpos.Y;
                     node.DiscardCache();
                     node.LayoutEditor(zoom);
                 }
@@ -298,21 +314,21 @@ namespace NodeEditor
                     var center = new PointF(dragSocket.X + dragSocket.Width/2f, dragSocket.Y + dragSocket.Height/2f);
                     if (dragSocket.Input)
                     {
-                        dragConnectionBegin.X += em.X - lastmpos.X;
-                        dragConnectionBegin.Y += em.Y - lastmpos.Y;
+                        dragConnectionBegin.X += loc.X - lastmpos.X;
+                        dragConnectionBegin.Y += loc.Y - lastmpos.Y;
                         dragConnectionEnd = center;
                         OnShowLocation(new RectangleF(dragConnectionBegin, new SizeF(10, 10)));
                     }
                     else
                     {
                         dragConnectionBegin = center;
-                        dragConnectionEnd.X += em.X - lastmpos.X;
-                        dragConnectionEnd.Y += em.Y - lastmpos.Y;
+                        dragConnectionEnd.X += loc.X - lastmpos.X;
+                        dragConnectionEnd.Y += loc.Y - lastmpos.Y;
                         OnShowLocation(new RectangleF(dragConnectionEnd, new SizeF(10, 10)));
                     }
                     
                 }
-                lastmpos = em;
+                lastmpos = loc;
             }            
 
             Invalidate();
@@ -321,6 +337,13 @@ namespace NodeEditor
         private void NodesControl_MouseDown(object sender, MouseEventArgs e)
         {
             var loc = GetLocationWithZoom(e.Location);
+
+            if (e.Button == MouseButtons.Right)
+            {
+                dragStart = loc;
+
+                Focus();
+            }
 
             if (e.Button == MouseButtons.Left)
             {
@@ -349,7 +372,7 @@ namespace NodeEditor
                         PassZoomToNodeCustomEditor(node.CustomEditor);
                     }
                     mdown = true;
-                    lastmpos = PointToScreen(loc);
+                    lastmpos = loc;
 
                     Refresh();
                 }
@@ -403,7 +426,7 @@ namespace NodeEditor
                             dragConnectionBegin = loc;
                             dragConnectionEnd = loc;
                             mdown = true;
-                            lastmpos = PointToScreen(loc);
+                            lastmpos = loc;
                         }
                     }
                     else
@@ -462,6 +485,11 @@ namespace NodeEditor
         {
             var loc = GetLocationWithZoom(e.Location);
 
+            if (e.Button == MouseButtons.Right)
+            {
+                dragStart = PointF.Empty;
+            }
+
             if (selectionStart != PointF.Empty)
             {
                 var rect = MakeRect(selectionStart, selectionEnd);
@@ -510,6 +538,23 @@ namespace NodeEditor
            
             dragSocket = null;
             mdown = false;
+            Invalidate();
+        }
+
+        private void NodesControl_MouseWheel(object sender, MouseEventArgs e)
+        {
+            var loc = GetLocationWithZoom(e.Location);
+
+            var amount = 1.1f;
+            var zoom = e.Delta > 0 ? amount : 1 / amount;
+
+            var t = Matrix4.Identity;
+            t *= Matrix4.CreateTranslation(-loc.X, -loc.Y, 0);
+            t *= Matrix4.CreateScale(zoom, zoom, 1);
+            t *= Matrix4.CreateTranslation(loc.X, loc.Y, 0);
+
+            transform = t * transform;
+
             Invalidate();
         }
 
@@ -655,12 +700,11 @@ namespace NodeEditor
             }
         }
 
-        private Point GetLocationWithZoom(Point location)
+        private PointF GetLocationWithZoom(PointF location)
         {
-            var zx = location.X / zoom;
-            var zy = location.Y / zoom;
-            var zl = new Point((int)zx, (int)zy);
-            return zl;
+            var vec = new Vector4(location.X, location.Y, 0, 1);
+            vec *= transform.Inverted();
+            return new PointF(vec.X, vec.Y);
         }
 
         private void PassZoomToNodes()
@@ -1123,6 +1167,7 @@ namespace NodeEditor
         /// </summary>
         public void Clear()
         {
+            transform = Matrix4.Identity;
             graph.Nodes.Clear();
             graph.Connections.Clear();
             Controls.Clear();
