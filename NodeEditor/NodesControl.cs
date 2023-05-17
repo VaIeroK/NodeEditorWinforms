@@ -149,6 +149,8 @@ namespace NodeEditor
 
         private bool breakExecution = false;        
 
+        private GLGraphics GLGraphics = new GLGraphics();
+
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -228,7 +230,7 @@ namespace NodeEditor
 
 
             //var g = e.Graphics;
-            var g = new GLGraphics();
+            var g = GLGraphics;
             var clipBounds = e.Graphics.ClipBounds;
 
             GL.MatrixMode(MatrixMode.Projection);

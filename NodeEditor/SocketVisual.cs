@@ -44,6 +44,8 @@ namespace NodeEditor
             get { return Type.Name.Replace("&", "") == typeof (ExecutionPath).Name; }
         }
 
+        internal Font font = SystemFonts.SmallCaptionFont;
+
         public void Draw(GLGraphics g, PointF mouseLocation, MouseButtons mouseButtons)
         {            
             var socketRect = new RectangleF(X, Y, Width, Height);
@@ -64,14 +66,14 @@ namespace NodeEditor
                 var sf = new StringFormat();
                 sf.Alignment = StringAlignment.Near;
                 sf.LineAlignment = StringAlignment.Center;                
-                //g.DrawString(Name,SystemFonts.SmallCaptionFont, fontBrush, new RectangleF(X+Width+2,Y,1000,Height), sf);
+                g.DrawString(Name, font, fontBrush, new RectangleF(X+Width+2,Y,1000,Height), sf);
             }
             else
             {
                 var sf = new StringFormat();
                 sf.Alignment = StringAlignment.Far;
                 sf.LineAlignment = StringAlignment.Center;
-                //g.DrawString(Name, SystemFonts.SmallCaptionFont, fontBrush, new RectangleF(X-1000, Y, 1000, Height), sf);
+                g.DrawString(Name, font, fontBrush, new RectangleF(X-1000, Y, 1000, Height), sf);
             }
 
             g.InterpolationMode = InterpolationMode.HighQualityBilinear;

@@ -343,6 +343,8 @@ namespace NodeEditor
             return new SizeF(GetNodeBounds().Width, HeaderHeight);
         }
 
+        private static Font font = SystemFonts.DefaultFont;
+
         /// <summary>
         /// Allows node to be drawn on given Graphics context.       
         /// </summary>
@@ -384,7 +386,7 @@ namespace NodeEditor
             g.DrawRectangle(Pens.Black, Rectangle.Round(rect));
 
             // TODO why tf is SystemFonts.DefaultFont so slow
-            //g.DrawString(Name, SystemFonts.DefaultFont, Brushes.Black, new PointF(X + 3, Y + 3));       
+            g.DrawString(Name, font, Brushes.Black, new PointF(X + 3, Y + 3));
 
             var sockets = GetSockets();
             foreach (var socet in sockets)
