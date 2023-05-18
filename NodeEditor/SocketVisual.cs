@@ -45,6 +45,8 @@ namespace NodeEditor
         }
 
         internal Font font = SystemFonts.SmallCaptionFont;
+        internal static Bitmap Exec = Resources.exec;
+        internal static Bitmap Socket = Resources.socket;
 
         public void Draw(GLGraphics g, PointF mouseLocation, MouseButtons mouseButtons)
         {            
@@ -81,11 +83,11 @@ namespace NodeEditor
 
             if (IsExecution)
             {
-                //g.DrawImage(Resources.exec, socketRect);
+                g.DrawImage(Exec, socketRect);
             }
             else
             {
-                //g.DrawImage(Resources.socket, socketRect);
+                g.DrawImage(Socket, socketRect);
             }
         }
 

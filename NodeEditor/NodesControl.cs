@@ -547,7 +547,7 @@ namespace NodeEditor
         {
             var loc = GetLocationWithZoom(e.Location);
 
-            var amount = 1.1f;
+            var amount = 1.3f;
             var zoom = e.Delta > 0 ? amount : 1 / amount;
 
             var t = Matrix4.Identity;
