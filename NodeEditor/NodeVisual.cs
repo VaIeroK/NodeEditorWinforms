@@ -361,11 +361,11 @@ namespace NodeEditor
 
             if (Feedback == FeedbackType.Warning)
             {
-                g.DrawRectangle(new Pen(Color.Yellow, 4), Rectangle.Round(feedrect));
+                g.DrawRectangle(new Pen(Color.Yellow, 4), feedrect);
             }
             else if (Feedback == FeedbackType.Error)
             {
-                g.DrawRectangle(new Pen(Color.Red, 5), Rectangle.Round(feedrect));
+                g.DrawRectangle(new Pen(Color.Red, 5), feedrect);
             }
 
             var caption = new RectangleF(new PointF(X,Y), GetHeaderSize());
@@ -379,11 +379,11 @@ namespace NodeEditor
                 g.FillRectangle(mouseHoverCaption ? Brushes.Gold : Brushes.Goldenrod, caption);
             }
             else
-            {                
+            {
                 g.FillRectangle(mouseHoverCaption ? Brushes.Cyan : Brushes.Aquamarine, caption);
             }
-            g.DrawRectangle(Pens.Gray, Rectangle.Round(caption));
-            g.DrawRectangle(Pens.Black, Rectangle.Round(rect));
+            g.DrawRectangle(Pens.Gray, caption);
+            g.DrawRectangle(Pens.Black, rect);
 
             // TODO why tf is SystemFonts.DefaultFont so slow
             g.DrawString(Name, font, Brushes.Black, new PointF(X + 3, Y + 3));

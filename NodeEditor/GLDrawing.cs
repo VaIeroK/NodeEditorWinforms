@@ -22,18 +22,12 @@ namespace NodeEditor
     {
         public static void DrawRectangle(RectangleF rect, Color4 color)
         {
-            GL.Begin(PrimitiveType.Lines);
+            GL.Begin(PrimitiveType.LineStrip);
 
             GL.Color4(color);
             GL.Vertex2(rect.Left, rect.Top);
             GL.Vertex2(rect.Right, rect.Top);
-
-            GL.Vertex2(rect.Right, rect.Top);
             GL.Vertex2(rect.Right, rect.Bottom);
-
-            GL.Vertex2(rect.Right, rect.Bottom);
-            GL.Vertex2(rect.Left, rect.Bottom);
-
             GL.Vertex2(rect.Left, rect.Bottom);
             GL.Vertex2(rect.Left, rect.Top);
 
@@ -64,6 +58,8 @@ namespace NodeEditor
         private Dictionary<string, Texture> StringTextures = new Dictionary<string, Texture>();
         private Dictionary<Image, Texture> ImageTextures = new Dictionary<Image, Texture>();
 
+        internal static Graphics TmpGraphics = Graphics.FromImage(new Bitmap(1,1));
+
         protected class Texture
         {
             public int Width;
@@ -81,19 +77,16 @@ namespace NodeEditor
 
                 GL.Begin(PrimitiveType.Quads);
 
-                    var hw = 0.5 / Width;
-                    var hh = 0.5 / Height;
-
-                    GL.TexCoord2(hw, hh);
+                    GL.TexCoord2(0, 0);
                     GL.Vertex2(left, top);
 
-                    GL.TexCoord2(hw + UVWidth, hh);
+                    GL.TexCoord2(UVWidth, 0);
                     GL.Vertex2(right, top);
 
-                    GL.TexCoord2(hw + UVWidth, hh + UVHeight);
+                    GL.TexCoord2(0 + UVWidth, UVHeight);
                     GL.Vertex2(right, bottom);
 
-                    GL.TexCoord2(hw, hh + UVHeight);
+                    GL.TexCoord2(0, UVHeight);
                     GL.Vertex2(left, bottom);
 
                 GL.End();
@@ -123,7 +116,7 @@ namespace NodeEditor
             return n;
         }
 
-        private Texture CreateTexture(int width, int height, Action<Graphics> fn)
+        private Texture CreateTexture(int width, int height, float resolution, Action<Graphics> fn)
         {
             var bitmap = new Bitmap((int) NextPowerOfTwo((uint) width), (int) NextPowerOfTwo((uint) height));
 
@@ -145,17 +138,17 @@ namespace NodeEditor
 
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bitmap.Width, bitmap.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
 
-            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Clamp );
-            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Clamp );
-            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest );
-            GL.TexParameter( TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest );
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Clamp);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Clamp);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
 
             return new Texture
             {
                 Width = width,
-                Height = width,
-                UVWidth = (float) width / bitmap.Width,
-                UVHeight = (float) height / bitmap.Height,
+                Height = height,
+                UVWidth = (float) width / bitmap.Width * resolution,
+                UVHeight = (float) height / bitmap.Height * resolution,
                 Handle = handle,
             };
         }
@@ -166,15 +159,13 @@ namespace NodeEditor
             if (StringTextures.TryGetValue(str, out tex))
                 return tex;
 
-            tex = CreateTexture(256, 256, (g) =>
-            {
-                var sf = new StringFormat(StringFormat.GenericDefault);
-                sf.SetMeasurableCharacterRanges(
-                      Enumerable.Range(0, str.Length)
-                      .Select(i => new CharacterRange(i, 1)).ToArray());
 
-                var targetRectangle = new RectangleF(0, 0, 200, 120);
-                g.DrawString(str, font, brush, targetRectangle, sf);
+            var size = TmpGraphics.MeasureString(str, font);
+
+            tex = CreateTexture(2 * (int) Math.Ceiling(size.Width), 2 * (int) Math.Ceiling(size.Height), 2, (g) =>
+            {
+                g.ScaleTransform(2, 2);
+                g.DrawString(str, font, brush, Point.Empty);
             });
 
             StringTextures.Add(str, tex);
@@ -187,7 +178,7 @@ namespace NodeEditor
             if (ImageTextures.TryGetValue(image, out tex))
                 return tex;
 
-            tex = CreateTexture(image.Width, image.Height, (g) =>
+            tex = CreateTexture(image.Width, image.Height, 1, (g) =>
             {
                 g.DrawImage(image, 0, 0);
             });
@@ -212,12 +203,21 @@ namespace NodeEditor
                     throw new NotImplementedException();
             }
         }
-        public void DrawString(String str, Font font, Brush brush, PointF position)
+        public void DrawString(String str, Font font, Brush brush, PointF position, StringAlignment align = StringAlignment.Near)
         {
-            GetStringTexture(str, font, brush).Draw(position);
-        }
-        public void DrawString(String str, Font font, Brush brush, RectangleF bounds, StringFormat format)
-        {
+            var tex = GetStringTexture(str, font, brush);
+            switch (align)
+            {
+                case StringAlignment.Far:
+                    tex.Draw(new PointF(position.X - tex.Width / tex.UVWidth, position.Y));
+                    break;
+                case StringAlignment.Near:
+                    tex.Draw(position);
+                    break;
+                case StringAlignment.Center:
+                    tex.Draw(new PointF(position.X - (tex.Width / tex.UVWidth) / 2, position.Y));
+                    break;
+            }
         }
         public void DrawImage(Image image, RectangleF rect)
         {
@@ -225,16 +225,14 @@ namespace NodeEditor
         }
         public void DrawLines(Pen pen, PointF[] points)
         {
-            GL.Begin(PrimitiveType.Lines);
+            GL.Begin(PrimitiveType.LineStrip);
 
-            GL.LineWidth(pen.Width);
-            GL.Enable(EnableCap.LineSmooth);
+            GL.LineWidth(pen.Width); // TODO likely unsupported
 
             GL.Color4(GLDrawing.ToColor4(pen.Color));
-            for (var i = 0; i < points.Length - 2; i++)
+            foreach (var point in points)
             {
-                GL.Vertex2(points[i].X, points[i].Y);
-                GL.Vertex2(points[i + 1].X, points[i + 1].Y);
+                GL.Vertex2(point.X, point.Y);
             }
 
             GL.End();

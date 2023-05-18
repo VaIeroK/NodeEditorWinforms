@@ -65,17 +65,11 @@ namespace NodeEditor
             
             if (Input)
             {
-                var sf = new StringFormat();
-                sf.Alignment = StringAlignment.Near;
-                sf.LineAlignment = StringAlignment.Center;                
-                g.DrawString(Name, font, fontBrush, new RectangleF(X+Width+2,Y,1000,Height), sf);
+                g.DrawString(Name, font, fontBrush, new PointF(X + Width + 2, Y));
             }
             else
             {
-                var sf = new StringFormat();
-                sf.Alignment = StringAlignment.Far;
-                sf.LineAlignment = StringAlignment.Center;
-                g.DrawString(Name, font, fontBrush, new RectangleF(X-1000, Y, 1000, Height), sf);
+                g.DrawString(Name, font, fontBrush, new PointF(X, Y), StringAlignment.Far);
             }
 
             g.InterpolationMode = InterpolationMode.HighQualityBilinear;
