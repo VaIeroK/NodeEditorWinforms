@@ -182,6 +182,7 @@ namespace NodeEditor
             if (keyEventArgs.KeyCode == Keys.Delete)
             {
                 DeleteSelectedNodes();
+                DeleteHoveredConns();
             }
 
             if (keyEventArgs.Control)
@@ -222,7 +223,7 @@ namespace NodeEditor
             if (dragSocket != null)
             {
                 var pen = customDrawInfo.GetConnectionStyle(dragSocket.Type, true);
-                NodesGraph.DrawConnection(e.Graphics, e.Graphics.ClipBounds, pen, dragConnectionBegin, dragConnectionEnd, PreferFastRendering);
+                NodesGraph.DrawConnection(e.Graphics, e.Graphics.ClipBounds, pen, dragConnectionBegin, dragConnectionEnd, lastmpos, null, PreferFastRendering);
             }
 
             if (selectionStart != PointF.Empty)
@@ -623,6 +624,14 @@ namespace NodeEditor
                     }
                     context.Items.Add(new ToolStripSeparator());
                 }
+                if (graph.Connections.Any(x => x.IsHover))
+                {
+                    context.Items.Add("Delete Connection(s)", null, ((o, args) =>
+                    {
+                        DeleteHoveredConns();
+                    }));
+                    context.Items.Add(new ToolStripSeparator());
+                }
                 if (allContextItems.Values.Any(x => x > 0))
                 {
                     var handy = allContextItems.Where(x => x.Value > 0 && !string.IsNullOrEmpty(((x.Key.Tag) as NodeToken).Attribute.Menu)).OrderByDescending(x => x.Value).Take(8);
@@ -751,6 +760,16 @@ namespace NodeEditor
                 }
                 graph.Nodes.RemoveAll(x => graph.Nodes.Where(n => n.IsSelected).Contains(x));
             }
+            Invalidate();
+        }
+
+        private void DeleteHoveredConns()
+        {
+            foreach (NodeConnection e in graph.Connections.Where(x => x.IsHover).ToArray())
+            {
+                graph.Connections.Remove(e);
+            }
+
             Invalidate();
         }
 

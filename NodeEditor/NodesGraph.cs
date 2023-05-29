@@ -62,8 +62,8 @@ namespace NodeEditor
                 var begin = beginSocket.Location + new SizeF(beginSocket.Width / 2f, beginSocket.Height / 2f);
                 var end = endSocket.Location += new SizeF(endSocket.Width / 2f, endSocket.Height / 2f);                               
 
-                DrawConnection(g, clipBounds, executionPen2, begin, end, preferFastRendering);
-                DrawConnection(g, clipBounds, executionPen, begin, end, preferFastRendering);
+                DrawConnection(g, clipBounds, executionPen2, begin, end, mouseLocation, connection, preferFastRendering);
+                DrawConnection(g, clipBounds, executionPen, begin, end, mouseLocation, connection, preferFastRendering);
             }
             foreach (var connection in Connections.Where(x => !x.IsExecution))
             {
@@ -75,8 +75,7 @@ namespace NodeEditor
                 var end = endSocket.Location += new SizeF(endSocket.Width / 2f, endSocket.Height / 2f);
 
                 var cpen = info.GetConnectionStyle(connection.InputSocket.Type, false);
-                DrawConnection(g, clipBounds, cpen, begin, end, preferFastRendering);
-               
+                DrawConnection(g, clipBounds, cpen, begin, end, mouseLocation, connection, preferFastRendering);
             }
 
             var orderedNodes = Nodes.OrderByDescending(x => x.Order);
@@ -89,7 +88,7 @@ namespace NodeEditor
             Console.WriteLine($"graph.Draw took {sw.ElapsedMilliseconds}ms");
         }
 
-        public static void DrawConnection(Graphics g, RectangleF clipBounds, Pen pen, PointF output, PointF input, bool preferFastRendering = false)
+        public static void DrawConnection(Graphics g, RectangleF clipBounds, Pen pen, PointF output, PointF input, PointF mouseLocation, NodeConnection conn, bool preferFastRendering = false)
         {            
             if (input == output) return;
 
@@ -130,7 +129,70 @@ namespace NodeEditor
                 points[i] = f;
             }
 
-            g.DrawLines(pen, points);
+            Pen drawPen = new Pen(pen.Color, pen.Width);
+            if (conn != null)
+            {
+                conn.IsHover = IsMouseOverLine(mouseLocation, points);
+
+                if (conn.IsHover)
+                {
+                    drawPen.Width += 2;
+                    drawPen.Color = Color.FromArgb(Clamp(pen.Color.R + 40, 0, 255), Clamp(pen.Color.G + 40, 0, 255), Clamp(pen.Color.B + 40, 0, 255));
+                }
+            }
+
+            g.DrawLines(drawPen, points);
+        }
+
+        private static bool IsMouseOverLine(PointF mouseLocation, PointF[] points)
+        {
+            for (int i = 1; i < points.Length; i++)
+            {
+                if (IsMouseOverLineSegment(mouseLocation, points[i - 1], points[i]))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsMouseOverLineSegment(PointF mouseLocation, PointF segmentStart, PointF segmentEnd)
+        {
+            float tolerance = 4.0f;
+            float padding = 4.0f;
+
+            float minX = Math.Min(segmentStart.X, segmentEnd.X) - padding;
+            float maxX = Math.Max(segmentStart.X, segmentEnd.X) + padding;
+            float minY = Math.Min(segmentStart.Y, segmentEnd.Y) - padding;
+            float maxY = Math.Max(segmentStart.Y, segmentEnd.Y) + padding;
+
+            if (mouseLocation.X >= minX && mouseLocation.X <= maxX && mouseLocation.Y >= minY && mouseLocation.Y <= maxY)
+            {
+                float distance = CalculateDistanceFromPointToLine(mouseLocation, segmentStart, segmentEnd);
+                return distance <= tolerance;
+            }
+
+            return false;
+        }
+
+        private static float CalculateDistanceFromPointToLine(PointF point, PointF lineStart, PointF lineEnd)
+        {
+            float a = lineStart.Y - lineEnd.Y;
+            float b = lineEnd.X - lineStart.X;
+            float c = lineStart.X * lineEnd.Y - lineEnd.X * lineStart.Y;
+
+            float numerator = Math.Abs(a * point.X + b * point.Y + c);
+            float denominator = (float)Math.Sqrt(a * a + b * b);
+
+            return numerator / denominator;
+        }
+
+        public static int Clamp(int val, int min, int max)
+        {
+            if (val < min)
+                val = min;
+            if (val > max) 
+                val = max;
+            return val;
         }
 
         public static double Sat(double x)
@@ -139,7 +201,6 @@ namespace NodeEditor
             if (x > 1) return 1;
             return x;
         }
-
 
         public static double Scale(double x, double a, double b, double c, double d)
         {
