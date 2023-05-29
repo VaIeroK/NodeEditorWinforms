@@ -45,7 +45,9 @@ namespace NodeEditor
         public NodesGraph graph = new NodesGraph();
         public bool needRepaint = true;
         private Timer timer = new Timer();
-        private bool mdown;
+        private bool mdown = false;
+        private bool ctrldown = false;
+        private bool shiftdown = false;
         private Point lastmpos;
         private SocketVisual dragSocket;
         private NodeVisual dragSocketNode;
@@ -152,6 +154,7 @@ namespace NodeEditor
             timer.Tick += TimerOnTick;
             timer.Start();        
             KeyDown += OnKeyDown;
+            KeyUp += OnKeyUp;
             SetStyle(ControlStyles.Selectable, true);
         }
 
@@ -180,6 +183,21 @@ namespace NodeEditor
             {
                 DeleteSelectedNodes();
             }
+
+            if (keyEventArgs.Control)
+                ctrldown = true;
+
+            if (keyEventArgs.Shift)
+                shiftdown = true;
+        }
+
+        private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
+        {
+            if (!keyEventArgs.Control)
+                ctrldown = false;
+
+            if (!keyEventArgs.Shift)
+                shiftdown = false;
         }
 
         private void TimerOnTick(object sender, EventArgs eventArgs)
@@ -474,6 +492,42 @@ namespace NodeEditor
             dragSocket = null;
             mdown = false;
             needRepaint = true;
+        }
+
+        private void NodesControl_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (shiftdown)
+            {
+                ((HandledMouseEventArgs)e).Handled = true;
+                int scrollAmount = e.Delta * SystemInformation.MouseWheelScrollLines / 120;
+
+                int newValue = HorizontalScroll.Value - scrollAmount;
+
+                int minValue = HorizontalScroll.Minimum;
+                int maxValue = HorizontalScroll.Maximum - HorizontalScroll.LargeChange + 1;
+                newValue = Math.Max(minValue, Math.Min(newValue, maxValue));
+
+                HorizontalScroll.Value = newValue;
+            }
+
+            if (ctrldown)
+            {
+                ((HandledMouseEventArgs)e).Handled = true;
+
+                var amount = 0.1f;
+                var newZoom = Zoom + (e.Delta > 0 ? amount : -amount);
+
+                if (newZoom < 0.1f)
+                    newZoom = 0.1f;
+                else if (newZoom > 3.0f)
+                    newZoom = 3.0f;
+
+                if (Zoom != newZoom)
+                {
+                    Zoom = newZoom;
+                    Invalidate();
+                }
+            }
         }
 
         private void AddToMenu(ToolStripItemCollection items, NodeToken token, string path, EventHandler click)
