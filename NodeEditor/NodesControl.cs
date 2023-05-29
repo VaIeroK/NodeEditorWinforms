@@ -188,6 +188,7 @@ namespace NodeEditor
             if (keyEventArgs.KeyCode == Keys.Delete)
             {
                 DeleteSelectedNodes();
+                DeleteHoveredConns();
             }
 
             if (keyEventArgs.Control)
