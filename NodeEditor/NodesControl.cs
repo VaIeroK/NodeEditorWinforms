@@ -156,6 +156,7 @@ namespace NodeEditor
             KeyDown += OnKeyDown;
             KeyUp += OnKeyUp;
             SetStyle(ControlStyles.Selectable, true);
+            PreferFastRendering = true;
         }
 
         private void ContextOnFeedbackInfo(string message, NodeVisual nodeVisual, FeedbackType type, object tag, bool breakExecution)
