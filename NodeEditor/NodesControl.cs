@@ -264,7 +264,7 @@ namespace NodeEditor
             if (dragSocket != null)
             {
                 var pen = customDrawInfo.GetConnectionStyle(dragSocket.Type, true);
-                NodesGraph.DrawConnection(g, clipBounds, pen, dragConnectionBegin, dragConnectionEnd, PreferFastRendering);
+                NodesGraph.DrawConnection(g, clipBounds, pen, dragConnectionBegin, dragConnectionEnd, lastmpos, null, PreferFastRendering);
             }
 
             if (selectionStart != PointF.Empty)
@@ -376,13 +376,10 @@ namespace NodeEditor
                     graph.Nodes.ForEach(x => x.IsSelected = false);
                 }
 
-                var node =
-                    graph.Nodes.OrderBy(x => x.Order).FirstOrDefault(
-                        x => new RectangleF(new PointF(x.X, x.Y), x.GetHeaderSize()).Contains(loc));
+                var node = graph.Nodes.OrderBy(x => x.Order).FirstOrDefault(x => new RectangleF(new PointF(x.X, x.Y), x.GetHeaderSize()).Contains(loc));
 
                 if (node != null && !mdown)
                 {
-                    
                     node.IsSelected = true;
                     
                     node.Order = graph.Nodes.Min(x => x.Order) - 1;
@@ -563,7 +560,7 @@ namespace NodeEditor
 
         private void NodesControl_MouseWheel(object sender, MouseEventArgs e)
         {
-            if (false)//(shiftdown)
+            if (shiftdown)
             {
                 ((HandledMouseEventArgs)e).Handled = true;
                 int scrollAmount = e.Delta * SystemInformation.MouseWheelScrollLines / 120;
@@ -687,6 +684,14 @@ namespace NodeEditor
                             }
                         }));                       
                     }
+                    context.Items.Add(new ToolStripSeparator());
+                }
+                if (graph.Connections.Any(x => x.IsHover))
+                {
+                    context.Items.Add("Delete Connection(s)", null, ((o, args) =>
+                    {
+                        DeleteHoveredConns();
+                    }));
                     context.Items.Add(new ToolStripSeparator());
                 }
                 if (allContextItems.Values.Any(x => x > 0))
@@ -1211,6 +1216,16 @@ namespace NodeEditor
             Controls.Clear();
             Refresh();
             rebuildConnectionDictionary = true;
+        }
+
+        private void DeleteHoveredConns()
+        {
+            foreach (NodeConnection e in graph.Connections.Where(x => x.IsHover).ToArray())
+            {
+                graph.Connections.Remove(e);
+            }
+
+            Invalidate();
         }
     }
 }

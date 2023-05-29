@@ -29,6 +29,8 @@ namespace NodeEditor
         public NodeVisual InputNode { get; set; }
         public string InputSocketName { get; set; }
 
+        public bool IsHover { get; set; }
+
         public SocketVisual OutputSocket
         {
             get { return OutputNode.GetSockets().FirstOrDefault(x => x.Name == OutputSocketName); }
