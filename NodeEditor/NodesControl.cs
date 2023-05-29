@@ -48,7 +48,9 @@ namespace NodeEditor
 
         public NodesGraph graph = new NodesGraph();
         public bool needRepaint = true;
-        private bool mdown;
+        private bool mdown = false;
+        private bool ctrldown = false;
+        private bool shiftdown = false;
         private PointF lastmpos;
         private SocketVisual dragSocket;
         private NodeVisual dragSocketNode;
@@ -158,6 +160,7 @@ namespace NodeEditor
         {
             InitializeComponent();
             KeyDown += OnKeyDown;
+            KeyUp += OnKeyUp;
             SetStyle(ControlStyles.Selectable, true);
         }
 
@@ -186,6 +189,21 @@ namespace NodeEditor
             {
                 DeleteSelectedNodes();
             }
+
+            if (keyEventArgs.Control)
+                ctrldown = true;
+
+            if (keyEventArgs.Shift)
+                shiftdown = true;
+        }
+
+        private void OnKeyUp(object sender, KeyEventArgs keyEventArgs)
+        {
+            if (!keyEventArgs.Control)
+                ctrldown = false;
+
+            if (!keyEventArgs.Shift)
+                shiftdown = false;
         }
 
         private void NodesControl_Resize(object sender, EventArgs e)
@@ -545,19 +563,37 @@ namespace NodeEditor
 
         private void NodesControl_MouseWheel(object sender, MouseEventArgs e)
         {
-            var loc = GetLocationWithZoom(e.Location);
+            if (false)//(shiftdown)
+            {
+                ((HandledMouseEventArgs)e).Handled = true;
+                int scrollAmount = e.Delta * SystemInformation.MouseWheelScrollLines / 120;
 
-            var amount = 1.3f;
-            var zoom = e.Delta > 0 ? amount : 1 / amount;
+                int newValue = HorizontalScroll.Value - scrollAmount;
 
-            var t = Matrix4.Identity;
-            t *= Matrix4.CreateTranslation(-loc.X, -loc.Y, 0);
-            t *= Matrix4.CreateScale(zoom, zoom, 1);
-            t *= Matrix4.CreateTranslation(loc.X, loc.Y, 0);
+                int minValue = HorizontalScroll.Minimum;
+                int maxValue = HorizontalScroll.Maximum - HorizontalScroll.LargeChange + 1;
+                newValue = Math.Max(minValue, Math.Min(newValue, maxValue));
 
-            transform = t * transform;
+                HorizontalScroll.Value = newValue;
+            }
 
-            Invalidate();
+            if (ctrldown)
+            {
+                ((HandledMouseEventArgs)e).Handled = true;
+                var loc = GetLocationWithZoom(e.Location);
+
+                var amount = 1.3f;
+                var zoom = e.Delta > 0 ? amount : 1 / amount;
+
+                var t = Matrix4.Identity;
+                t *= Matrix4.CreateTranslation(-loc.X, -loc.Y, 0);
+                t *= Matrix4.CreateScale(zoom, zoom, 1);
+                t *= Matrix4.CreateTranslation(loc.X, loc.Y, 0);
+
+                transform = t * transform;
+
+                Invalidate();
+            }
         }
 
         private void AddToMenu(ToolStripItemCollection items, NodeToken token, string path, EventHandler click)
